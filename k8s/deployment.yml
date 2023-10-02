@@ -13,11 +13,22 @@ spec:
     metadata:
       labels:
         app: config-service
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/path: /actuator/prometheus
+      prometheus.io/port: "8888"
     spec:
       containers:
         - name: config-service
           image: config-service
           imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 60Mi
+            limits:
+              cpu: 200m
+              memory: 120Mi
           lifecycle:
             preStop:
               exec:
@@ -27,3 +38,15 @@ spec:
           env:
             - name: SPRING_CLOUD_CONFIG_URI
               value: "https://github.com/akinwale-habibullah/config-repo"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8888
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8888
+            initialDelaySeconds: 5
+            periodSeconds: 15
